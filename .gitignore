@@ -9,3 +9,4 @@ out
 desktop-*.png
 mobile-*.png
 statements/*.pdf
+tsconfig.tsbuildinfo
