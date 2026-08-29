@@ -49,12 +49,26 @@ export function analyze(statements: Statement[], scannedAt = new Date().toISOStr
     (a, b) => b.date.localeCompare(a.date) || a.description.localeCompare(b.description),
   );
 
-  const months = new Map<string, { spend: number; payments: number }>();
+  const months = new Map<
+    string,
+    { spend: number; payments: number; refunds: number; purchaseCount: number; lineCount: number }
+  >();
   for (const txn of transactions) {
     const key = monthKey(txn.date);
-    const bucket = months.get(key) ?? { spend: 0, payments: 0 };
-    if (txn.type === "purchase" && txn.amount > 0) bucket.spend += txn.amount;
+    const bucket = months.get(key) ?? {
+      spend: 0,
+      payments: 0,
+      refunds: 0,
+      purchaseCount: 0,
+      lineCount: 0,
+    };
+    bucket.lineCount += 1;
+    if (txn.type === "purchase" && txn.amount > 0) {
+      bucket.spend += txn.amount;
+      bucket.purchaseCount += 1;
+    }
     if (txn.type === "payment") bucket.payments += Math.abs(txn.amount);
+    if (txn.type === "refund") bucket.refunds += Math.abs(txn.amount);
     months.set(key, bucket);
   }
 
@@ -65,6 +79,9 @@ export function analyze(statements: Statement[], scannedAt = new Date().toISOStr
       label: monthLabel(month),
       spend: Number(value.spend.toFixed(2)),
       payments: Number(value.payments.toFixed(2)),
+      refunds: Number(value.refunds.toFixed(2)),
+      purchaseCount: value.purchaseCount,
+      lineCount: value.lineCount,
     }));
 
   const categorySpend = new Map<Category, number>();

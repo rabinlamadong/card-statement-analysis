@@ -110,7 +110,15 @@ export type DashboardData = {
     cardCount: number;
     monthCount: number;
   };
-  byMonth: { month: string; label: string; spend: number; payments: number }[];
+  byMonth: {
+    month: string;
+    label: string;
+    spend: number;
+    payments: number;
+    refunds: number;
+    purchaseCount: number;
+    lineCount: number;
+  }[];
   byCategory: { category: Category; spend: number; share: number }[];
   byCard: { cardName: string; last4: string; spend: number; count: number }[];
   errors: { fileName: string; message: string }[];

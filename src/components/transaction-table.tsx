@@ -1,4 +1,9 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { SortHead } from "@/components/month-table";
 import { formatDate, formatMoney } from "@/lib/format";
+import { compareValues, nextSort, type SortDir } from "@/lib/sort";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 const TYPE_LABEL: Record<TransactionType, string> = {
@@ -11,6 +16,8 @@ const TYPE_LABEL: Record<TransactionType, string> = {
   interest: "Profit",
 };
 
+type SortKey = "date" | "merchant" | "type" | "category" | "amount";
+
 export function TransactionTable({
   transactions,
   currency,
@@ -18,21 +25,60 @@ export function TransactionTable({
   transactions: Transaction[];
   currency: string;
 }) {
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const rows = useMemo(() => {
+    return [...transactions].sort((left, right) => {
+      const pair: Record<SortKey, [string | number, string | number]> = {
+        date: [left.date, right.date],
+        merchant: [left.merchant, right.merchant],
+        type: [left.type, right.type],
+        category: [left.category, right.category],
+        amount: [left.amount, right.amount],
+      };
+      const [a, b] = pair[sortKey];
+      return compareValues(a, b, sortDir);
+    });
+  }, [transactions, sortKey, sortDir]);
+
+  function onHeader(key: SortKey) {
+    const next = nextSort(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  }
+
   return (
     <div className="max-h-[36rem] overflow-auto rounded-2xl border border-line">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead className="sticky top-0 bg-canvas/95 backdrop-blur">
           <tr className="text-[11px] uppercase tracking-[0.14em] text-muted">
-            <th className="px-3 py-2 font-medium">Date</th>
-            <th className="px-3 py-2 font-medium">Merchant</th>
-            <th className="px-3 py-2 font-medium">Type</th>
-            <th className="px-3 py-2 font-medium">Category</th>
+            <SortHead label="Date" active={sortKey === "date"} dir={sortDir} onClick={() => onHeader("date")} />
+            <SortHead
+              label="Merchant"
+              active={sortKey === "merchant"}
+              dir={sortDir}
+              onClick={() => onHeader("merchant")}
+            />
+            <SortHead label="Type" active={sortKey === "type"} dir={sortDir} onClick={() => onHeader("type")} />
+            <SortHead
+              label="Category"
+              active={sortKey === "category"}
+              dir={sortDir}
+              onClick={() => onHeader("category")}
+            />
             <th className="px-3 py-2 font-medium">Card</th>
-            <th className="px-3 py-2 text-right font-medium">Amount</th>
+            <SortHead
+              label="Amount"
+              active={sortKey === "amount"}
+              dir={sortDir}
+              align="right"
+              onClick={() => onHeader("amount")}
+            />
           </tr>
         </thead>
         <tbody>
-          {transactions.map((txn) => (
+          {rows.map((txn) => (
             <tr key={txn.id} className="border-t border-line/80 hover:bg-canvas/50">
               <td className="tabular whitespace-nowrap px-3 py-2 text-muted">
                 {formatDate(txn.date, "MMM d, yyyy")}
@@ -62,7 +108,7 @@ export function TransactionTable({
               </td>
             </tr>
           ))}
-          {transactions.length === 0 && (
+          {rows.length === 0 && (
             <tr>
               <td colSpan={6} className="px-3 py-10 text-center text-sm text-muted">
                 No lines match the current filters.

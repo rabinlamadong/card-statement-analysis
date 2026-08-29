@@ -1,4 +1,8 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { formatDate, formatMoney } from "@/lib/format";
+import { compareValues, nextSort, type SortDir } from "@/lib/sort";
 import type { DashboardData, Insight } from "@/lib/types";
 
 export function InsightsPanel({ insights }: { insights: Insight[] }) {
@@ -21,6 +25,8 @@ export function InsightsPanel({ insights }: { insights: Insight[] }) {
   );
 }
 
+type MerchantSort = "spend" | "count" | "merchant";
+
 export function MerchantList({
   merchants,
   currency,
@@ -28,12 +34,38 @@ export function MerchantList({
   merchants: DashboardData["merchants"];
   currency: string;
 }) {
-  const top = merchants.slice(0, 8);
-  const max = top[0]?.spend ?? 1;
+  const [sortKey, setSortKey] = useState<MerchantSort>("spend");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const ranked = useMemo(
+    () => [...merchants].sort((left, right) => compareValues(left[sortKey], right[sortKey], sortDir)),
+    [merchants, sortKey, sortDir],
+  );
+  const top = ranked.slice(0, 8);
+  const max = Math.max(...top.map((row) => row.spend), 1);
+
+  function onSort(key: MerchantSort) {
+    const next = nextSort(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  }
+
   return (
     <section className="rounded-3xl border border-line bg-paper p-5">
       <h2 className="font-display text-2xl text-ink">Top merchants</h2>
-      <p className="mt-1 text-xs text-muted">Where charges concentrate</p>
+      <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted">
+        <span>Sort</span>
+        {(["spend", "count", "merchant"] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onSort(key)}
+            className={sortKey === key ? "text-ink" : "hover:text-ink"}
+          >
+            {key === "spend" ? "amount" : key === "count" ? "charges" : "name"}
+            {sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+          </button>
+        ))}
+      </div>
       <ul className="mt-4 space-y-3">
         {top.map((row) => (
           <li key={row.merchant}>
@@ -191,6 +223,8 @@ export function CityList({
   );
 }
 
+type FileSort = "periodStart" | "fileName" | "newBalance";
+
 export function StatementFiles({
   statements,
   byCard,
@@ -200,10 +234,43 @@ export function StatementFiles({
   byCard: DashboardData["byCard"];
   currency: string;
 }) {
+  const [sortKey, setSortKey] = useState<FileSort>("periodStart");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const files = useMemo(() => {
+    return [...statements].sort((left, right) => {
+      const leftValue = left[sortKey] ?? "";
+      const rightValue = right[sortKey] ?? "";
+      return compareValues(
+        typeof leftValue === "number" ? leftValue : String(leftValue),
+        typeof rightValue === "number" ? rightValue : String(rightValue),
+        sortDir,
+      );
+    });
+  }, [statements, sortKey, sortDir]);
+
+  function onSort(key: FileSort) {
+    const next = nextSort(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  }
+
   return (
     <section className="rounded-3xl border border-line bg-paper p-5">
       <h2 className="font-display text-2xl text-ink">Loaded files</h2>
-      <p className="mt-1 text-xs text-muted">From the statements folder</p>
+      <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted">
+        <span>Sort</span>
+        {(["periodStart", "fileName", "newBalance"] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onSort(key)}
+            className={sortKey === key ? "text-ink" : "hover:text-ink"}
+          >
+            {key === "periodStart" ? "period" : key === "fileName" ? "name" : "balance"}
+            {sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+          </button>
+        ))}
+      </div>
 
       <div className="mt-4 space-y-2">
         {byCard.map((card) => (
@@ -217,7 +284,7 @@ export function StatementFiles({
       </div>
 
       <ul className="mt-4 max-h-[28rem] space-y-2 overflow-auto pr-1">
-        {statements.map((statement) => (
+        {files.map((statement) => (
           <li key={statement.id} className="rounded-2xl border border-line/80 px-3 py-2.5">
             <p className="truncate text-sm font-medium">{statement.fileName}</p>
             <p className="mt-1 text-[11px] leading-4 text-muted">

@@ -1,16 +1,41 @@
 # Fathom
 
-Local credit card statement intelligence. Drop PDFs into `statements/`, run the app, and read spending as widgets.
+Local credit card statement dashboard. It reads PDFs from `statements/` and turns them into spend widgets.
 
-## Run
+## Start
+
+You need Node 22+.
 
 ```bash
+git clone git@github.com:rabinlamadong/card-statement-analysis.git
+cd card-statement-analysis
 npm install
+```
+
+Put your statement PDFs in the `statements/` folder at the project root. Filenames like `2026-01.pdf` work well.
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Add statement PDFs to `statements/` and click **Rescan folder**.
+Open [http://localhost:3000](http://localhost:3000). After you add or replace PDFs, click **Rescan folder**.
 
-Optional US-style samples: `npm run generate-statements`.
+## What you can do
 
-The parser is tuned for Emirates Islamic card statements (`10 JAN 09 JAN MERCHANT CITY ARE 12.34`, payments ending in `CR`) and also accepts generic `MM/DD/YYYY  DESCRIPTION  12.34` lines. Image-only scans will not parse.
+- Scan every `.pdf` in `statements/`
+- See totals, categories, merchants, cities, refunds, and recurring charges
+- Open **By month** for purchases, payments, and refunds per month
+- Click a month (or use the month filter) to limit the register
+- Sort the month table, register, merchants, and loaded files
+
+## Notes
+
+The parser is tuned for Emirates Islamic statements (`10 JAN 09 JAN MERCHANT CITY ARE 12.34`, credits ending in `CR`). Generic `MM/DD/YYYY  DESCRIPTION  12.34` lines also work. Image-only scans will not parse.
+
+Statement PDFs stay on your machine. They are not committed to git.
+
+Optional US-style samples:
+
+```bash
+npm run generate-statements
+```

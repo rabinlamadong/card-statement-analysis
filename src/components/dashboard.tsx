@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderOpen, RefreshCw } from "lucide-react";
 import { CategoryChart, SpendChart } from "@/components/charts";
+import { MonthTable } from "@/components/month-table";
 import {
   AdjustmentsPanel,
   CityList,
@@ -24,6 +25,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
   const [category, setCategory] = useState("all");
   const [card, setCard] = useState("all");
   const [kind, setKind] = useState("all");
+  const [month, setMonth] = useState("all");
 
   const cards = useMemo(
     () => data.byCard.map((card) => [card.last4, card.cardName] as const),
@@ -36,6 +38,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
       if (category !== "all" && txn.category !== category) return false;
       if (card !== "all" && txn.cardLast4 !== card) return false;
       if (kind !== "all" && txn.type !== kind) return false;
+      if (month !== "all" && !txn.date.startsWith(month)) return false;
       if (!q) return true;
       return (
         txn.description.toLowerCase().includes(q) ||
@@ -43,7 +46,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
         txn.category.toLowerCase().includes(q)
       );
     });
-  }, [data.transactions, query, category, card, kind]);
+  }, [data.transactions, query, category, card, kind, month]);
 
   async function refresh() {
     setRefreshing(true);
@@ -112,6 +115,13 @@ export function Dashboard({ data }: { data: DashboardData }) {
             </section>
           </div>
 
+          <MonthTable
+            months={data.byMonth}
+            currency={data.currency}
+            selected={month}
+            onSelect={setMonth}
+          />
+
           <div className="grid gap-5 lg:grid-cols-2">
             <InsightsPanel insights={data.insights} />
             <AdjustmentsPanel adjustments={data.adjustments} currency={data.currency} />
@@ -159,6 +169,18 @@ export function Dashboard({ data }: { data: DashboardData }) {
                     {data.byCategory.map((row) => (
                       <option key={row.category} value={row.category}>
                         {row.category}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={month}
+                    onChange={(event) => setMonth(event.target.value)}
+                    className="h-9 rounded-full border border-line bg-canvas/60 px-3 text-sm outline-none"
+                  >
+                    <option value="all">All months</option>
+                    {[...data.byMonth].reverse().map((row) => (
+                      <option key={row.month} value={row.month}>
+                        {row.label}
                       </option>
                     ))}
                   </select>
