@@ -190,7 +190,7 @@ function extractEmiratesTransactions(
     const date = toIsoFromParts(txnDay, txnMonth, year);
     if (!date) continue;
 
-    let rest = match[5].trim();
+    const rest = match[5].trim();
     if (/\b\d+(?:,\d{3})*\.\d{2}\s+[A-Z]{3}$/.test(rest) && !/CR$/i.test(rest)) {
       pendingFx = { date, description: rest.replace(/\s+\d+(?:,\d{3})*\.\d{2}\s+[A-Z]{3}$/, "").trim() };
       continue;
@@ -316,8 +316,8 @@ export function parseStatementText(input: {
     /Statement Period\s*:?\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})\s*[-–—]\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i,
   );
 
-  let periodStart = meta.periodStart;
-  let periodEnd = meta.periodEnd;
+  let periodStart: string | null = meta.periodStart;
+  let periodEnd: string | null = meta.periodEnd;
   if (!periodStart && genericPeriod) {
     periodStart = parseSlashDate(genericPeriod[1]);
     periodEnd = parseSlashDate(genericPeriod[2]);

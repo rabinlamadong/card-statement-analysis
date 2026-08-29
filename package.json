@@ -6,6 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint . && tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "generate-statements": "node scripts/generate-statements.mjs"
   },
   "dependencies": {
@@ -24,6 +26,8 @@
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.3",
     "pdf-lib": "^1.17.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.12",
